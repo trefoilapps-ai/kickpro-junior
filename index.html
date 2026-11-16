@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KickPro Junior - Футбольная платформа развития</title>
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22KickPro%20Junior%22%2C%22short_name%22%3A%22KickPro%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230d1b2a%22%2C%22theme_color%22%3A%22%230056b3%22%2C%22icons%22%3A%5B%5D%7D">
+    <style>
+        :root {
+            --primary: #0056b3;
+            --primary-dark: #003d82;
+            --secondary: #10b981;
+            --bg-color: #0d1b2a;
+            --card-bg: #1b263b;
+            --card-hover: #22304a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --accent: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.5; padding-bottom: 70px; }
+        header { background: linear-gradient(135deg, #003d82, #0056b3); padding: 16px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .logo { font-size: 20px; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+        .header-controls { display: flex; gap: 8px; align-items: center; }
+        select, button { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+        select option { background: var(--bg-color); color: white; }
+        button:hover { background: rgba(255,255,255,0.25); }
+        .btn-primary { background: var(--secondary); border: none; }
+        .btn-primary:hover { background: #059669; }
+        .nav-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { background: transparent; border: none; color: var(--text-muted); padding: 6px 12px; border-radius: 6px; white-space: nowrap; font-size: 14px; }
+        .tab-btn.active { background: white; color: var(--primary-dark); font-weight: 700; }
+        
+        main { max-width: 700px; margin: 0 auto; padding: 16px; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { font-size: 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: #60a5fa; }
+        h3 { font-size: 16px; margin-bottom: 8px; }
+        p, li { font-size: 14px; color: var(--text-muted); margin-bottom: 8px; }
+        strong { color: var(--text-main); }
+        
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 14px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; background: rgba(0,86,179,0.3); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+        
+        .exercise-item { background: var(--card-hover); border-left: 4px solid var(--primary); padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+        .exercise-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: 30px; }
+        .footer a { color: #60a5fa; text-decoration: none; }
+        
+        .hidden { display: none !important; }
+        
+        /* Модальное окно */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 16px; }
+        .modal-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; max-width: 500px; width: 100%; padding: 20px; max-height: 90vh; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-top">
+            <div class="logo">⚡ KickPro Junior</div>
+            <div class="header-controls">
+                <select id="modeSelect" onchange="switchAppMode()">
+                    <option value="parent">👶 Родитель / Ребёнок</option>
+                    <option value="coach">📋 Тренер</option>
+                </select>
+                <select id="langSelect" onchange="changeLanguage()">
+                    <option value="ru">RU</option>
+                    <option value="kz">KZ</option>
+                    <option value="en">EN</option>
+                </select>
+                <button onclick="openFeedback()" title="Обратная связь">✉️</button>
+            </div>
+        </div>
+        <div class="nav-tabs" id="parentNav">
+            <button class="tab-btn active" onclick="switchTab('today')">📅 Сегодня</button>
+            <button class="tab-btn" onclick="switchTab('profile')">👤 Профиль</button>
+            <button class="tab-btn" onclick="switchTab('catalog')">📚 Каталог</button>
+            <button class="tab-btn" onclick="switchTab('diagnosis')">📊 Диагностика</button>
+        </div>
+        <div class="nav-tabs hidden" id="coachNav">
+            <button class="tab-btn active" onclick="switchCoachTab('methodology')">📖 Методика</button>
+            <button class="tab-btn" onclick="switchCoachTab('rondo')">⚽ Рондо</button>
+            <button class="tab-btn" onclick="switchCoachTab('types')">👥 Типы игроков</button>
+        </div>
+    </header>
+
+    <main id="mainContent">
+        <!-- Контент динамически управляется скриптом -->
+    </main>
+
+    <!-- Модальное окно обратной связи -->
+    <div id="feedbackModal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="fbTitle">✉️ Написать автору</h3>
+            <p id="fbText" style="margin-bottom: 12px;">Есть идея, отзыв или вопрос? Свяжитесь с создателями проекта:</p>
+            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-bottom: 14px; text-align: center;">
+                <strong id="emailLinkText" style="font-size: 16px; color: #60a5fa;">trefoilapps@gmail.com</strong>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-primary" style="flex: 1; padding: 10px;" onclick="sendEmail()">📧 Написать на почту</button>
+                <button style="flex: 1; padding: 10px;" onclick="copyEmail()">📋 Скопировать</button>
+            </div>
+            <button style="width: 100%; margin-top: 10px; background: transparent; border: 1px solid var(--border); padding: 8px;" onclick="closeFeedback()">Закрыть</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2026 Trefoil Apps (<a href="mailto:trefoilapps@gmail.com">trefoilapps@gmail.com</a>)</p>
+        <p style="margin-top: 4px;">PWA Offline-First • Версия для юных футболистов</p>
+    </footer>
+
+    <script>
+        // Базовые данные приложения
+        let appData = {
+            mode: 'parent',
+            tab: 'today',
+            coachTab: 'methodology',
+            lang: 'ru',
+            child: {
+                name: 'Айсултан',
+                birthYear: 2018,
+                birthMonth: 3,
+                height: 133,
+                weight: 24.3,
+                foot: 'правая',
+                playerType: '⚡ Резкий / Игровой',
+                level: 'B'
+            },
+            weeklyRhythm: {
+                group: 3,
+                individual: 2,
+                rest: 1
+            }
+        };
+
+        const translations = {
+            ru: {
+                todayTitle: "Индивидуальный план на сегодня",
+                profileTitle: "Профиль игрока",
+                catalogTitle: "Каталог упражнений",
+                diagnosisTitle: "Карта развития (Диагностика)"
+            },
+            kz: {
+                todayTitle: "Бүгінгі жеке жоспар",
+                profileTitle: "Ойыншы профайлы",
+                catalogTitle: "Жаттығулар каталогы",
+                diagnosisTitle: "Даму картасы (Диагностика)"
+            },
+            en: {
+                todayTitle: "Today's Training Plan",
+                profileTitle: "Player Profile",
+                catalogTitle: "Exercise Catalog",
+                diagnosisTitle: "Development Card (Scouting)"
+            }
+        };
+
+        function switchAppMode() {
+            appData.mode = document.getElementById('modeSelect').value;
+            document.getElementById('parentNav').classList.toggle('hidden', appData.mode !== 'parent');
+            document.getElementById('coachNav').classList.toggle('hidden', appData.mode !== 'coach');
+            render();
+        }
+
+        function switchTab(tab) {
+            appData.tab = tab;
+            document.querySelectorAll('#parentNav .tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            render();
+        }
+
+        function switchCoachTab(tab) {
+            appData.coachTab = tab;
+            document.querySelectorAll('#coachNav .tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            render();
+        }
+
+        function changeLanguage() {
+            appData.lang = document.getElementById('langSelect').value;
+            render();
+        }
+
+        function openFeedback() { document.getElementById('feedbackModal').classList.remove('hidden'); }
+        function closeFeedback() { document.getElementById('feedbackModal').classList.add('hidden'); }
+        function sendEmail() { window.location.href = "mailto:trefoilapps@gmail.com?subject=KickPro%20Junior%20Feedback"; }
+        function copyEmail() {
+            navigator.clipboard.writeText("trefoilapps@gmail.com");
+            alert("Адрес trefoilapps@gmail.com скопирован!");
+        }
+
+        function render() {
+            const main = document.getElementById('mainContent');
+            if (appData.mode === 'coach') {
+                renderCoach(main);
+            } else {
+                renderParent(main);
+            }
+        }
+
+        function renderParent(main) {
+            if (appData.tab === 'today') {
+                main.innerHTML = `
+                    <div class="card">
+                        <h2>📅 План на сегодня (30-40 мин)</h2>
+                        <p>Режим тренировки адаптирован под тип: <strong>${appData.child.playerType}</strong></p>
+                        <div class="exercise-item">
+                            <h3>1. Разминка и мобильность (7 мин)</h3>
+                            <p>Динамическая растяжка, сеточка шагов, координационная дорожка.</p>
+                        </div>
+                        <div class="exercise-item">
+                            <h3>2. Акцент под тип игрока (10 мин)</h3>
+                            <p>Взрывные рывки 5-10 метров, работа с резкой сменой направления движения.</p>
+                        </div>
+                        <div class="exercise-item">
+                            <h3>3. Технический навык (12 мин)</h3>
+                            <p>Ведение мяча внешней стороной стопы в ограниченном коридоре.</p>
+                        </div>
+                        <div class="exercise-item">
+                            <h3>4. Заминка (6 мин)</h3>
+                            <p>Контроль мяча в статике, дыхательные упражнения и легкая растяжка.</p>
+                        </div>
+                        <button class="btn-primary" style="width:100%; padding: 12px; margin-top: 10px;" onclick="alert('Отлично! Тренировка отмечена как выполненная.')">✅ Отметить тренировку выполненной</button>
+                    </div>
+                `;
+            } else if (appData.tab === 'profile') {
+                main.innerHTML = `
+                    <div class="card">
+                        <h2>👤 Профиль игрока</h2>
+                        <div class="form-group"><label>Имя:</label><input type="text" value="${appData.child.name}" id="pName"></div>
+                        <div class="grid-2">
+                            <div class="form-group"><label>Год рождения:</label><input type="number" value="${appData.child.birthYear}" id="pYear"></div>
+                            <div class="form-group"><label>Месяц:</label><input type="number" value="${appData.child.birthMonth}" id="pMonth"></div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group"><label>Рост (см):</label><input type="number" step="0.5" value="${appData.child.height}" id="pHeight"></div>
+                            <div class="form-group"><label>Вес (кг):</label><input type="number" step="0.1" value="${appData.child.weight}" id="pWeight"></div>
+                        </div>
+                        <div class="form-group"><label>Тип игрока:</label>
+                            <select id="pType">
+                                <option ${appData.child.playerType.includes('Резкий')?'selected':''}>⚡ Резкий / Игровой</option>
+                                <option ${appData.child.playerType.includes('Базовый')?'selected':''}>⚙️ Базовый / Универсал</option>
+                                <option ${appData.child.playerType.includes('Мощный')?'selected':''}>🛡️ Мощный / Силовой</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary" style="width:100%; padding: 10px; margin-top: 10px;" onclick="saveProfile()">Сохранить профиль</button>
+                    </div>
+                `;
+            } else if (appData.tab === 'catalog') {
+                main.innerHTML = `
+                    <div class="card">
+                        <h2>📚 Каталог упражнений</h2>
+                        <p>База футбольных упражнений для домашних и полевых тренировок.</p>
+                        <div class="exercise-item">
+                            <h3>⚽ Слалом между фишками</h3>
+                            <p><strong>Цель:</strong> Развитие мягкого первого касания и дриблинга.</p>
+                            <p><strong>Как делать:</strong> Расставьте 6-8 фишек на расстоянии 1 метра друг от друга. Ведите мяч поочередно правой и левой ногой.</p>
+                            <span class="badge">Техника</span> <span class="badge">Дома / Двор</span>
+                        </div>
+                        <div class="exercise-item">
+                            <h3>⚡ Старт из положения сидя</h3>
+                            <p><strong>Цель:</strong> Развитие взрывной скорости и резкости.</p>
+                            <p><strong>Как делать:</strong> Игрок сидит спиной к направлению движения по свистку делает рывок на 5 метров.</p>
+                            <span class="badge">Физика</span> <span class="badge">Резкий тип</span>
+                        </div>
+                    </div>
+                `;
+            } else if (appData.tab === 'diagnosis') {
+                main.innerHTML = `
+                    <div class="card">
+                        <h2>📊 Карта развития (Диагностика)</h2>
+                        <p>Оцените навыки игрока по шкале от 1 до 5 для формирования индивидуального отчета и скаут-карточки.</p>
+                        <div class="form-group"><label>1. Дриблинг и владение мячом (1-5)</label><input type="number" min="1" max="5" value="4"></div>
+                        <div class="form-group"><label>2. Первое касание (1-5)</label><input type="number" min="1" max="5" value="4"></div>
+                        <div class="form-group"><label>3. Скорость и резкость (1-5)</label><input type="number" min="1" max="5" value="5"></div>
+                        <div class="form-group"><label>4. Реакция на ошибки (1-5)</label><input type="number" min="1" max="5" value="4"></div>
+                        <button class="btn-primary" style="width:100%; padding: 12px; margin-top: 10px;" onclick="alert('Отчет и скаут-карточка успешно сформированы!')">✨ Сгенерировать карточку игрока</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderCoach(main) {
+            if (appData.coachTab === 'methodology') {
+                main.innerHTML = `
+                    <div class="card">
+                        <h2>📖 Методика работы с детьми</h2>
+                        <p>Современные принципы обучения футболу для возрастов 6–12 лет. Фокус на принятие решений, игровой интеллект и сохранение интереса.</p>
+                    </div>
+                `;
+            } else if (appData.coachTab === 'rondo') {
+                main.innerHTML = `
+                    <div class="card">
+                        <h2>⚽ Методика Рондо</h2>
+                        <p>Рондо (квадраты) — главный инструмент обучения быстрому пасу и игре под прессингом.</p>
+                        <div class="exercise-item"><h3>Рондо 3х1</h3><p>Для игроков 6-8 лет. Развивает базовые навыки передачи мяча и поиска свободного пространства.</p></div>
+                        <div class="exercise-item"><h3>Рондо 4х2</h3><p>Для игроков 9-12 лет. Учит командному взаимодействию и сохранению владения.</p></div>
+                    </div>
+                `;
+            } else if (appData.coachTab === 'types') {
+                main.innerHTML = `
+                    <div class="card">
+                        <h2>👥 Работа с типами игроков</h2>
+                        <p><strong>⚡ Резкий / Игровой:</strong> Давать больше пространства для проходов, не ограничивать индивидуальные действия.</p>
+                        <p><strong>🛡️ Мощный / Силовой:</strong> Использовать сильные стороны в единоборствах, развивать координацию.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function saveProfile() {
+            appData.child.name = document.getElementById('pName').value;
+            appData.child.birthYear = document.getElementById('pYear').value;
+            appData.child.birthMonth = document.getElementById('pMonth').value;
+            appData.child.height = document.getElementById('pHeight').value;
+            appData.child.weight = document.getElementById('pWeight').value;
+            appData.child.playerType = document.getElementById('pType').value;
+            alert("Профиль успешно сохранен на устройстве!");
+        }
+
+        render();
+    </script>
+</body>
+</html>
