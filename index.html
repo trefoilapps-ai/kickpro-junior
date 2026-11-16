@@ -54,14 +54,12 @@
         .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; background: rgba(0,86,179,0.3); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
         
         .exercise-item { background: var(--card-hover); border-left: 4px solid var(--primary); padding: 12px; border-radius: 8px; margin-bottom: 10px; }
-        .exercise-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
         
         .footer { text-align: center; padding: 20px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: 30px; margin-bottom: 40px; }
         .footer a { color: #60a5fa; text-decoration: none; }
         
         .hidden { display: none !important; }
         
-        /* Модальное окно */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 16px; }
         .modal-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; max-width: 500px; width: 100%; padding: 20px; max-height: 90vh; overflow-y: auto; }
     </style>
@@ -104,31 +102,31 @@
 
     <!-- Нижняя панель навигации (Режим Тренер) -->
     <nav class="bottom-nav hidden" id="coachNav">
-        <button class="nav-item active" onclick="switchCoachTab('methodology', this)"><span>📖</span><span>Методика</span></button>
-        <button class="nav-item" onclick="switchCoachTab('rondo', this)"><span>⚽</span><span>Рондо</span></button>
-        <button class="nav-item" onclick="switchCoachTab('types', this)"><span>👥</span><span>Типы</span></button>
-        <button class="nav-item" onclick="switchCoachTab('ages', this)"><span>📈</span><span>Возраста</span></button>
+        <button class="nav-item active" onclick="switchCoachTab('methodology', this)"><span>📖</span><span id="cMethod">Методика</span></button>
+        <button class="nav-item" onclick="switchCoachTab('rondo', this)"><span>⚽</span><span id="cRondo">Рондо</span></button>
+        <button class="nav-item" onclick="switchCoachTab('types', this)"><span>👥</span><span id="cTypes">Типы</span></button>
+        <button class="nav-item" onclick="switchCoachTab('ages', this)"><span>📈</span><span id="cAges">Возраста</span></button>
     </nav>
 
     <!-- Модальное окно обратной связи -->
     <div id="feedbackModal" class="modal hidden">
         <div class="modal-content">
-            <h3>✉️ Написать автору</h3>
-            <p style="margin-bottom: 12px;">Есть идея, отзыв или вопрос? Свяжитесь с разработчиком:</p>
+            <h3 id="fbTitle">✉️ Написать автору</h3>
+            <p id="fbDesc" style="margin-bottom: 12px;">Есть идея, отзыв или вопрос? Свяжитесь с разработчиком:</p>
             <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-bottom: 14px; text-align: center;">
                 <strong style="font-size: 16px; color: #60a5fa;">trefoilapps@gmail.com</strong>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button class="btn-primary" style="flex: 1; padding: 10px;" onclick="sendEmail()">📧 Написать</button>
-                <button style="flex: 1; padding: 10px;" onclick="copyEmail()">📋 Копировать</button>
+                <button class="btn-primary" style="flex: 1; padding: 10px;" id="fbSendBtn" onclick="sendEmail()">📧 Написать</button>
+                <button style="flex: 1; padding: 10px;" id="fbCopyBtn" onclick="copyEmail()">📋 Копировать</button>
             </div>
-            <button style="width: 100%; margin-top: 10px; background: transparent; border: 1px solid var(--border); padding: 8px;" onclick="closeFeedback()">Закрыть</button>
+            <button style="width: 100%; margin-top: 10px; background: transparent; border: 1px solid var(--border); padding: 8px;" id="fbCloseBtn" onclick="closeFeedback()">Закрыть</button>
         </div>
     </div>
 
     <footer class="footer">
         <p>© 2026 Trefoil Apps (<a href="mailto:trefoilapps@gmail.com">trefoilapps@gmail.com</a>)</p>
-        <p style="margin-top: 4px;">PWA Offline-First • KickPro Junior v1.2</p>
+        <p style="margin-top: 4px;" id="footerSub">PWA Offline-First • KickPro Junior v1.2</p>
     </footer>
 
     <script>
@@ -149,20 +147,145 @@
             }
         };
 
-        const t = {
-            ru: { today: "Сегодня", catalog: "Каталог", card: "Карта", profile: "Профиль", advice: "Советы" },
-            kz: { today: "Бүгін", catalog: "Каталог", card: "Карта", profile: "Профиль", advice: "Кеңес" },
-            en: { today: "Today", catalog: "Catalog", card: "Card", profile: "Profile", advice: "Advice" }
+        const dict = {
+            ru: {
+                today: "Сегодня", catalog: "Каталог", card: "Карта", profile: "Профиль", advice: "Советы",
+                coachMethod: "Методика", coachRondo: "Рондо", coachTypes: "Типы", coachAges: "Возраста",
+                
+                todayHeader: "📅 Индивидуальный план на сегодня (35 мин)",
+                adapted: "Режим адаптирован под тип:",
+                w1Title: "1. Разминка и координация (7 мин)", w1Desc: "Динамическая растяжка, сеточка шагов, работа с балансом.",
+                w2Title: "2. Акцент под тип игрока (10 мин)", w2Desc: "Взрывные рывки 5-10 метров, резкая смена направления.",
+                w3Title: "3. Технический навык (12 мин)", w3Desc: "Ведение мяча внешней и внутренней стороной стопы в коридоре.",
+                w4Title: "4. Заминка (6 мин)", w4Desc: "Контроль мяча в статике, дыхательные упражнения и растяжка.",
+                doneBtn: "✅ Отметить тренировку выполненной", doneMsg: "Отлично! Тренировка отмечена как выполненная.",
+
+                catHeader: "📚 Каталог упражнений", catDesc: "База упражнений для домашних и полевых тренировок юных футболистов.",
+                ex1Title: "⚽ Слалом между фишками", ex1Goal: "Цель: Развитие мягкого первого касания и дриблинга.", ex1Desc: "Как делать: Расставьте 6 фишек на расстоянии 1 метра. Ведите мяч поочередно правой и левой ногой.",
+                ex2Title: "⚡ Старт из положения сидя", ex2Goal: "Цель: Развитие взрывной скорости и резкости.", ex2Desc: "Как делать: Игрок сидит спиной к направлению движения, по сигналу делает рывок на 5 метров.",
+                badgeTech: "Техника", badgeHome: "Дома / Двор", badgePhys: "Физика", badgeType: "Резкий тип",
+
+                diagHeader: "📊 Карта развития (Диагностика)", diagDesc: "Оцените навыки игрока по шкале от 1 до 5 для формирования скаут-карточки.",
+                d1: "1. Дриблинг и владение мячом (1-5)", d2: "2. Первое касание (1-5)", d3: "3. Скорость и резкость (1-5)", d4: "4. Реакция на ошибки (1-5)",
+                genCardBtn: "✨ Сгенерировать карточку игрока", genCardMsg: "Скаут-карточка KickPro Junior успешно сформирована!",
+
+                profHeader: "👤 Профиль игрока", nameLbl: "Имя:", yearLbl: "Год рождения:", monthLbl: "Месяц рождения:", heightLbl: "Рост (см):", weightLbl: "Вес (кг):", typeLbl: "Тип игрока:", saveBtn: "Сохранить профиль", saveMsg: "Профиль сохранен на устройстве!",
+
+                adviceHeader: "💡 Рекомендации для родителей",
+                ad1: "• Поддерживайте ребёнка после ошибок — это важнейший элемент роста.",
+                ad2: "• Следите за полноценным отдыхом (минимум 1 полный день в неделю без нагрузок).",
+                ad3: "• Учитывайте эффект относительного возраста (RAE): рождённые в начале года часто имеют физическое преимущество, но техника и интеллект выходят на первый план позже.",
+
+                cmHeader: "📖 Методика работы с детьми", cmDesc: "Современные принципы обучения футболу для возрастов 6–12 лет. Фокус на принятие решений, игровой интеллект и сохранение интереса к спорту.",
+                crHeader: "⚽ Методика Рондо", crDesc: "Рондо (квадраты) — главный инструмент обучения быстрому пасу и игре под прессингом в ограниченном пространстве.",
+                r1Title: "Рондо 3х1", r1Desc: "Для игроков 6-8 лет. Развивает базовые навыки передачи мяча и поиска свободного коридора.",
+                r2Title: "Рондо 4х2", r2Desc: "Для игроков 9-12 лет. Учит командному взаимодействию и сохранению владения.",
+                ctHeader: "👥 Работа с типами игроков",
+                t1: "⚡ Резкий / Игровой: Предоставлять больше пространства для сольных проходов, не ограничивать креатив.",
+                t2: "🛡️ Мощный / Силовой: Использовать сильные стороны в единоборствах, развивать координацию и гибкость.",
+                caHeader: "📈 Периодизация по возрастам",
+                ag1: "6–8 лет: Базовая координация, владение мячом, любовь к игре через весёлые эстафеты.",
+                ag2: "9–10 лет: Техника под давлением, первые элементы тактики, основы рондо.",
+                ag3: "11–12 лет: Позиционная игра, развитие игрового мышления и физической выносливости."
+            },
+            kz: {
+                today: "Бүгін", catalog: "Каталог", card: "Карта", profile: "Профиль", advice: "Кеңес",
+                coachMethod: "Әдістеме", coachRondo: "Рондо", coachTypes: "Түрлері", coachAges: "Жастар",
+                
+                todayHeader: "📅 Бүгінгі жеке жоспар (35 мин)",
+                adapted: "Режим түріне бейімделген:",
+                w1Title: "1. Жылыну және үйлестіру (7 мин)", w1Desc: "Динамикалық созылу, қадамдар торы, тепе-теңдікпен жұмыс.",
+                w2Title: "2. Ойыншы түріне басымдық (10 мин)", w2Desc: "5-10 метрлік жарылыс жылдамдығы, бағытты күрт өзгерту.",
+                w3Title: "3. Техникалық дағды (12 мин)", w3Desc: "Дәліз ішінде допты сыртқы және ішкі табанмен алып жүру.",
+                w4Title: "4. Қалпына келтіру (6 мин)", w4Desc: "Допты статикада бақылау, тыныс алу жаттығулары және созылу.",
+                doneBtn: "✅ Жаттығуды орындалды деп белгілеу", doneMsg: "Керемет! Жаттығу орындалды деп белгіленді.",
+
+                catHeader: "📚 Жаттығулар каталогы", catDesc: "Жас футболшылардың үй және алаң жаттығуларына арналған база.",
+                ex1Title: "⚽ Фишкалар арасындағы слалом", ex1Goal: "Мақсаты: Жұмсақ бірінші жанасу мен дриблингті дамыту.", ex1Desc: "Қалай жасау керек: 6 фишканы 1 метр арақашықтықта қойыңыз. Допты оң және сол аяқпен кезектесіп жүргізіңіз.",
+                ex2Title: "⚡ Отырған жерден бастау", ex2Goal: "Мақсаты: Жарылыс жылдамдығы мен шапшаңдықты дамыту.", ex2Desc: "Қалай жасау керек: Ойыншы қозғалыс бағытына арқасымен отырады, белгі бойынша 5 метрге ұмтылады.",
+                badgeTech: "Техника", badgeHome: "Үй / Алаң", badgePhys: "Физика", badgeType: "Жылдам тип",
+
+                diagHeader: "📊 Даму картасы (Диагностика)", diagDesc: "Скаут-карточканы жасау үшін ойыншының дағдыларын 1-ден 5-ке дейін бағалаңыз.",
+                d1: "1. Дриблинг және допқа иелік ету (1-5)", d2: "2. Бірінші жанасу (1-5)", d3: "3. Жылдамдық пен шапшаңдық (1-5)", d4: "4. Қателерге реакция (1-5)",
+                genCardBtn: "✨ Ойыншы карточкасын жасау", genCardMsg: "KickPro Junior скаут-карточкасы сәтті жасалды!",
+
+                profHeader: "👤 Ойыншы профайлы", nameLbl: "Аты:", yearLbl: "Туған жылы:", monthLbl: "Туған айы:", heightLbl: "Бойы (см):", weightLbl: "Салмағы (кг):", typeLbl: "Ойыншы түрі:", saveBtn: "Профильді сақтау", saveMsg: "Профиль құрылғыда сақталды!",
+
+                adviceHeader: "💡 Ата-аналарға кеңестер",
+                ad1: "• Қателерден кейін баланы қолдаңыз — бұл өсудің ең маңызды элементі.",
+                ad2: "• Толық демалысты қадағалаңыз (аптасына кемінде 1 толық демалыс күні).",
+                ad3: "• Салыстырмалы жас әсерін (RAE) ескеріңіз: жыл басында туылғандардың физикалық артықшылығы жиі болады, бірақ техника мен интеллект кейін бірінші орынға шығады.",
+
+                cmHeader: "📖 Балалармен жұмыс әдістемесі", cmDesc: "6–12 жастағы футболды оқытудың заманауи принциптері. Шешім қабылдауға, ойын интеллектіне және қызығушылықты сақтауға бағытталған.",
+                crHeader: "⚽ Рондо әдістемесі", crDesc: "Рондо (шаршылар) — шектеулі кеңістікте жылдам пас пен прессингке қарсы ойнауды үйрететін басты құрал.",
+                r1Title: "Рондо 3х1", r1Desc: "6-8 жастағы ойыншылар үшін. Допты беру және бос дәлізді табу дағдыларын дамытады.",
+                r2Title: "Рондо 4х2", r2Desc: "9-12 жастағы ойыншылар үшін. Командалық өзара әрекетсу мен иелікті сақтауға үйретеді.",
+                ctHeader: "👥 Ойыншы түрлерімен жұмыс",
+                t1: "⚡ Жылдам / Ойыншы: Жеке өтулерге көбірек кеңістік беру, креативті шектемеу.",
+                t2: "🛡️ Күшті / Күштік: Жекпе-жектердегі күшті жақтарын пайдалану, үйлестіру мен икемділікті дамыту.",
+                caHeader: "📈 Жастар бойынша кезеңдестіру",
+                ag1: "6–8 жас: Негізгі үйлестіру, допқа иелік ету, қызықты эстафеталар арқылы ойынға деген сүйіспеншілік.",
+                ag2: "9–10 жас: Қысым астындағы техника, тактиканың алғашқы элементтері, рондо негіздері.",
+                ag3: "11–12 жас: Позициялық ойын, ойын ойлауын және физикалық төзімділікті дамыту."
+            },
+            en: {
+                today: "Today", catalog: "Catalog", card: "Card", profile: "Profile", advice: "Advice",
+                coachMethod: "Methodology", coachRondo: "Rondo", coachTypes: "Types", coachAges: "Ages",
+                
+                todayHeader: "📅 Today's Training Plan (35 min)",
+                adapted: "Adapted for player type:",
+                w1Title: "1. Warm-up & Coordination (7 min)", w1Desc: "Dynamic stretching, ladder footwork, balance exercises.",
+                w2Title: "2. Player Type Focus (10 min)", w2Desc: "Explosive sprints 5-10 meters, sharp direction changes.",
+                w3Title: "3. Technical Skill (12 min)", w3Desc: "Dribbling with outside and inside of the foot in a corridor.",
+                w4Title: "4. Cool-down (6 min)", w4Desc: "Static ball control, breathing exercises and stretching.",
+                doneBtn: "✅ Mark training as completed", doneMsg: "Great! Training marked as completed.",
+
+                catHeader: "📚 Exercise Catalog", catDesc: "Database of exercises for home and field training of young players.",
+                ex1Title: "⚽ Slalom through cones", ex1Goal: "Goal: Develop soft first touch and dribbling.", ex1Desc: "How to do: Set up 6 cones 1 meter apart. Dribble using right and left foot alternately.",
+                ex2Title: "⚡ Sit-to-Sprint start", ex2Goal: "Goal: Develop explosive speed and quickness.", ex2Desc: "How to do: Player sits facing away from direction, sprints 5 meters on signal.",
+                badgeTech: "Technique", badgeHome: "Home / Yard", badgePhys: "Physics", badgeType: "Sharp type",
+
+                diagHeader: "📊 Development Card (Scouting)", diagDesc: "Rate player skills from 1 to 5 to generate a scout card.",
+                d1: "1. Dribbling & Ball Control (1-5)", d2: "2. First Touch (1-5)", d3: "3. Speed & Quickness (1-5)", d4: "4. Reaction to Mistakes (1-5)",
+                genCardBtn: "✨ Generate Player Card", genCardMsg: "KickPro Junior scout card successfully generated!",
+
+                profHeader: "👤 Player Profile", nameLbl: "Name:", yearLbl: "Birth Year:", monthLbl: "Birth Month:", heightLbl: "Height (cm):", weightLbl: "Weight (kg):", typeLbl: "Player Type:", saveBtn: "Save Profile", saveMsg: "Profile saved on device!",
+
+                adviceHeader: "💡 Parent Recommendations",
+                ad1: "• Support your child after mistakes — this is a crucial element of growth.",
+                ad2: "• Ensure proper rest (at least 1 full rest day per week with no load).",
+                ad3: "• Consider Relative Age Effect (RAE): those born early in the year often have a physical edge, but technique and intelligence prevail later.",
+
+                cmHeader: "📖 Coaching Methodology", cmDesc: "Modern football training principles for ages 6–12. Focus on decision-making, game intelligence, and keeping kids engaged.",
+                crHeader: "⚽ Rondo Methodology", crDesc: "Rondos (squares) are the main tool for teaching quick passing and playing under pressure in tight spaces.",
+                r1Title: "Rondo 3v1", r1Desc: "For ages 6-8. Develops basic passing skills and finding open spaces.",
+                r2Title: "Rondo 4v2", r2Desc: "For ages 9-12. Teaches team coordination and maintaining possession.",
+                ctHeader: "👥 Working with Player Types",
+                t1: "⚡ Sharp / Playful: Give more space for solo runs, do not restrict creativity.",
+                t2: "🛡️ Powerful / Physical: Use strengths in duels, develop coordination and flexibility.",
+                caHeader: "📈 Age Periodization",
+                ag1: "6–8 yrs: Basic coordination, ball mastery, love for the game through fun relays.",
+                ag2: "9–10 yrs: Technique under pressure, early tactical elements, rondo basics.",
+                ag3: "11–12 yrs: Positional play, game intelligence and physical endurance development."
+            }
         };
 
         function changeLanguage() {
             appData.lang = document.getElementById('langSelect').value;
-            const lang = t[appData.lang];
-            document.getElementById('tToday').innerText = lang.today;
-            document.getElementById('tCatalog').innerText = lang.catalog;
-            document.getElementById('tCard').innerText = lang.card;
-            document.getElementById('tProfile').innerText = lang.profile;
-            document.getElementById('tAdvice').innerText = lang.advice;
+            const l = dict[appData.lang];
+            
+            // Обновляем текст нижней панели
+            document.getElementById('tToday').innerText = l.today;
+            document.getElementById('tCatalog').innerText = l.catalog;
+            document.getElementById('tCard').innerText = l.card;
+            document.getElementById('tProfile').innerText = l.profile;
+            document.getElementById('tAdvice').innerText = l.advice;
+
+            document.getElementById('cMethod').innerText = l.coachMethod;
+            document.getElementById('cRondo').innerText = l.coachRondo;
+            document.getElementById('cTypes').innerText = l.coachTypes;
+            document.getElementById('cAges').innerText = l.coachAges;
+
             render();
         }
 
@@ -192,143 +315,101 @@
         function sendEmail() { window.location.href = "mailto:trefoilapps@gmail.com?subject=KickPro%20Junior%20Feedback"; }
         function copyEmail() {
             navigator.clipboard.writeText("trefoilapps@gmail.com");
-            alert("Адрес trefoilapps@gmail.com скопирован!");
+            alert("trefoilapps@gmail.com copied!");
         }
 
         function render() {
             const main = document.getElementById('mainContent');
+            const l = dict[appData.lang];
+
             if (appData.mode === 'coach') {
-                renderCoach(main);
+                if (appData.coachTab === 'methodology') {
+                    main.innerHTML = `<div class="card"><h2>${l.cmHeader}</h2><p>${l.cmDesc}</p></div>`;
+                } else if (appData.coachTab === 'rondo') {
+                    main.innerHTML = `
+                        <div class="card">
+                            <h2>${l.crHeader}</h2>
+                            <p>${l.crDesc}</p>
+                            <div class="exercise-item"><h3>${l.r1Title}</h3><p>${l.r1Desc}</p></div>
+                            <div class="exercise-item"><h3>${l.r2Title}</h3><p>${l.r2Desc}</p></div>
+                        </div>`;
+                } else if (appData.coachTab === 'types') {
+                    main.innerHTML = `<div class="card"><h2>${l.ctHeader}</h2><p>${l.t1}</p><p style="margin-top:8px;">${l.t2}</p></div>`;
+                } else if (appData.coachTab === 'ages') {
+                    main.innerHTML = `<div class="card"><h2>${l.caHeader}</h2><p>• ${l.ag1}</p><p style="margin-top:6px;">• ${l.ag2}</p><p style="margin-top:6px;">• ${l.ag3}</p></div>`;
+                }
             } else {
-                renderParent(main);
-            }
-        }
-
-        function renderParent(main) {
-            if (appData.tab === 'today') {
-                main.innerHTML = `
-                    <div class="card">
-                        <h2>📅 Индивидуальный план на сегодня (35 мин)</h2>
-                        <p>Режим адаптирован под тип: <strong>${appData.child.playerType}</strong></p>
-                        <div class="exercise-item">
-                            <h3>1. Разминка и координация (7 мин)</h3>
-                            <p>Динамическая растяжка, сеточка шагов, работа с балансом.</p>
-                        </div>
-                        <div class="exercise-item">
-                            <h3>2. Акцент под тип игрока (10 мин)</h3>
-                            <p>Взрывные рывки 5-10 метров, резкая смена направления.</p>
-                        </div>
-                        <div class="exercise-item">
-                            <h3>3. Технический навык (12 мин)</h3>
-                            <p>Ведение мяча внешней и внутренней стороной стопы в коридоре.</p>
-                        </div>
-                        <div class="exercise-item">
-                            <h3>4. Заминка (6 мин)</h3>
-                            <p>Контроль мяча в статике, дыхательные упражнения и растяжка.</p>
-                        </div>
-                        <button class="btn-primary" style="width:100%; padding: 12px; margin-top: 10px;" onclick="alert('Отлично! Тренировка отмечена как выполненная.')">✅ Отметить тренировку выполненной</button>
-                    </div>
-                `;
-            } else if (appData.tab === 'catalog') {
-                main.innerHTML = `
-                    <div class="card">
-                        <h2>📚 Каталог упражнений</h2>
-                        <p>База упражнений для домашних и полевых тренировок юных футболистов.</p>
-                        <div class="exercise-item">
-                            <h3>⚽ Слалом между фишками</h3>
-                            <p><strong>Цель:</strong> Развитие мягкого первого касания и дриблинга.</p>
-                            <p><strong>Как делать:</strong> Расставьте 6 фишек на расстоянии 1 метра. Ведите мяч поочередно правой и левой ногой.</p>
-                            <span class="badge">Техника</span> <span class="badge">Дома / Двор</span>
-                        </div>
-                        <div class="exercise-item">
-                            <h3>⚡ Старт из положения сидя</h3>
-                            <p><strong>Цель:</strong> Развитие взрывной скорости и резкости.</p>
-                            <p><strong>Как делать:</strong> Игрок сидит спиной к направлению движения, по сигналу делает рывок на 5 метров.</p>
-                            <span class="badge">Физика</span> <span class="badge">Резкий тип</span>
-                        </div>
-                    </div>
-                `;
-            } else if (appData.tab === 'diagnosis') {
-                main.innerHTML = `
-                    <div class="card">
-                        <h2>📊 Карта развития (Диагностика)</h2>
-                        <p>Оцените навыки игрока по шкале от 1 до 5 для формирования скаут-карточки.</p>
-                        <div class="form-group"><label>1. Дриблинг и владение мячом (1-5)</label><input type="number" min="1" max="5" value="4"></div>
-                        <div class="form-group"><label>2. Первое касание (1-5)</label><input type="number" min="1" max="5" value="4"></div>
-                        <div class="form-group"><label>3. Скорость и резкость (1-5)</label><input type="number" min="1" max="5" value="5"></div>
-                        <div class="form-group"><label>4. Реакция на ошибки (1-5)</label><input type="number" min="1" max="5" value="4"></div>
-                        <button class="btn-primary" style="width:100%; padding: 12px; margin-top: 10px;" onclick="alert('Скаут-карточка KickPro Junior успешно сформирована!')">✨ Сгенерировать карточку игрока</button>
-                    </div>
-                `;
-            } else if (appData.tab === 'profile') {
-                main.innerHTML = `
-                    <div class="card">
-                        <h2>👤 Профиль игрока</h2>
-                        <div class="form-group"><label>Имя:</label><input type="text" value="${appData.child.name}" id="pName"></div>
-                        <div class="grid-2">
-                            <div class="form-group"><label>Год рождения:</label><input type="number" value="${appData.child.birthYear}" id="pYear"></div>
-                            <div class="form-group"><label>Месяц рождения:</label><input type="number" value="${appData.child.birthMonth}" id="pMonth"></div>
-                        </div>
-                        <div class="grid-2">
-                            <div class="form-group"><label>Рост (см):</label><input type="number" step="0.5" value="${appData.child.height}" id="pHeight"></div>
-                            <div class="form-group"><label>Вес (кг):</label><input type="number" step="0.1" value="${appData.child.weight}" id="pWeight"></div>
-                        </div>
-                        <div class="form-group"><label>Тип игрока:</label>
-                            <select id="pType">
-                                <option ${appData.child.playerType.includes('Резкий')?'selected':''}>⚡ Резкий / Игровой</option>
-                                <option ${appData.child.playerType.includes('Базовый')?'selected':''}>⚙️ Базовый / Универсал</option>
-                                <option ${appData.child.playerType.includes('Мощный')?'selected':''}>🛡️ Мощный / Силовой</option>
-                            </select>
-                        </div>
-                        <button class="btn-primary" style="width:100%; padding: 10px; margin-top: 10px;" onclick="alert('Профиль сохранен на устройстве!')">Сохранить профиль</button>
-                    </div>
-                `;
-            } else if (appData.tab === 'advice') {
-                main.innerHTML = `
-                    <div class="card">
-                        <h2>💡 Рекомендации для родителей</h2>
-                        <p>• Поддерживайте ребёнка после ошибок — это важнейший элемент роста.</p>
-                        <p>• Следите за полноценным отдыхом (минимум 1 полный день в неделю без нагрузок).</p>
-                        <p>• Учитывайте эффект относительного возраста (RAE): рождённые в начале года часто имеют физическое преимущество, но техника и интеллект выходят на первый план позже.</p>
-                    </div>
-                `;
-            }
-        }
-
-        function renderCoach(main) {
-            if (appData.coachTab === 'methodology') {
-                main.innerHTML = `
-                    <div class="card">
-                        <h2>📖 Методика работы с детьми</h2>
-                        <p>Современные принципы обучения футболу для возрастов 6–12 лет. Фокус на принятие решений, игровой интеллект и сохранение интереса к спорту.</p>
-                    </div>
-                `;
-            } else if (appData.coachTab === 'rondo') {
-                main.innerHTML = `
-                    <div class="card">
-                        <h2>⚽ Методика Рондо</h2>
-                        <p>Рондо (квадраты) — главный инструмент обучения быстрому пасу и игре под прессингом в ограниченном пространстве.</p>
-                        <div class="exercise-item"><h3>Рондо 3х1</h3><p>Для игроков 6-8 лет. Развивает базовые навыки передачи мяча и поиска свободного коридора.</p></div>
-                        <div class="exercise-item"><h3>Рондо 4х2</h3><p>Для игроков 9-12 лет. Учит командному взаимодействию и сохранению владения.</p></div>
-                    </div>
-                `;
-            } else if (appData.coachTab === 'types') {
-                main.innerHTML = `
-                    <div class="card">
-                        <h2>👥 Работа с типами игроков</h2>
-                        <p><strong>⚡ Резкий / Игровой:</strong> Предоставлять больше пространства для сольных проходов, не ограничивать креатив.</p>
-                        <p><strong>🛡️ Мощный / Силовой:</strong> Использовать сильные стороны в единоборствах, развивать координацию и гибкость.</p>
-                    </div>
-                `;
-            } else if (appData.coachTab === 'ages') {
-                main.innerHTML = `
-                    <div class="card">
-                        <h2>📈 Периодизация по возрастам</h2>
-                        <p><strong>6–8 лет:</strong> Базовая координация, владение мячом, любовь к игре через весёлые эстафеты.</p>
-                        <p><strong>9–10 лет:</strong> Техника под давлением, первые элементы тактики, основы рондо.</p>
-                        <p><strong>11–12 лет:</strong> Позиционная игра, развитие игрового мышления и физической выносливости.</p>
-                    </div>
-                `;
+                if (appData.tab === 'today') {
+                    main.innerHTML = `
+                        <div class="card">
+                            <h2>${l.todayHeader}</h2>
+                            <p>${l.adapted} <strong>${appData.child.playerType}</strong></p>
+                            <div class="exercise-item"><h3>${l.w1Title}</h3><p>${l.w1Desc}</p></div>
+                            <div class="exercise-item"><h3>${l.w2Title}</h3><p>${l.w2Desc}</p></div>
+                            <div class="exercise-item"><h3>${l.w3Title}</h3><p>${l.w3Desc}</p></div>
+                            <div class="exercise-item"><h3>${l.w4Title}</h3><p>${l.w4Desc}</p></div>
+                            <button class="btn-primary" style="width:100%; padding: 12px; margin-top: 10px;" onclick="alert('${l.doneMsg}')">${l.doneBtn}</button>
+                        </div>`;
+                } else if (appData.tab === 'catalog') {
+                    main.innerHTML = `
+                        <div class="card">
+                            <h2>${l.catHeader}</h2>
+                            <p>${l.catDesc}</p>
+                            <div class="exercise-item">
+                                <h3>${l.ex1Title}</h3>
+                                <p><strong>${l.ex1Goal}</strong></p>
+                                <p>${l.ex1Desc}</p>
+                                <span class="badge">${l.badgeTech}</span> <span class="badge">${l.badgeHome}</span>
+                            </div>
+                            <div class="exercise-item">
+                                <h3>${l.ex2Title}</h3>
+                                <p><strong>${l.ex2Goal}</strong></p>
+                                <p>${l.ex2Desc}</p>
+                                <span class="badge">${l.badgePhys}</span> <span class="badge">${l.badgeType}</span>
+                            </div>
+                        </div>`;
+                } else if (appData.tab === 'diagnosis') {
+                    main.innerHTML = `
+                        <div class="card">
+                            <h2>${l.diagHeader}</h2>
+                            <p>${l.diagDesc}</p>
+                            <div class="form-group"><label>${l.d1}</label><input type="number" min="1" max="5" value="4"></div>
+                            <div class="form-group"><label>${l.d2}</label><input type="number" min="1" max="5" value="4"></div>
+                            <div class="form-group"><label>${l.d3}</label><input type="number" min="1" max="5" value="5"></div>
+                            <div class="form-group"><label>${l.d4}</label><input type="number" min="1" max="5" value="4"></div>
+                            <button class="btn-primary" style="width:100%; padding: 12px; margin-top: 10px;" onclick="alert('${l.genCardMsg}')">${l.genCardBtn}</button>
+                        </div>`;
+                } else if (appData.tab === 'profile') {
+                    main.innerHTML = `
+                        <div class="card">
+                            <h2>${l.profHeader}</h2>
+                            <div class="form-group"><label>${l.nameLbl}</label><input type="text" value="${appData.child.name}" id="pName"></div>
+                            <div class="grid-2">
+                                <div class="form-group"><label>${l.yearLbl}</label><input type="number" value="${appData.child.birthYear}" id="pYear"></div>
+                                <div class="form-group"><label>${l.monthLbl}</label><input type="number" value="${appData.child.birthMonth}" id="pMonth"></div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-group"><label>${l.heightLbl}</label><input type="number" step="0.5" value="${appData.child.height}" id="pHeight"></div>
+                                <div class="form-group"><label>${l.weightLbl}</label><input type="number" step="0.1" value="${appData.child.weight}" id="pWeight"></div>
+                            </div>
+                            <div class="form-group"><label>${l.typeLbl}</label>
+                                <select id="pType">
+                                    <option ${appData.child.playerType.includes('Резкий')||appData.child.playerType.includes('Жылдам')||appData.child.playerType.includes('Sharp')?'selected':''}>⚡ Резкий / Игровой</option>
+                                    <option ${appData.child.playerType.includes('Базовый')||appData.child.playerType.includes('Базалық')||appData.child.playerType.includes('Basic')?'selected':''}>⚙️ Базовый / Универсал</option>
+                                    <option ${appData.child.playerType.includes('Мощный')||appData.child.playerType.includes('Күшті')||appData.child.playerType.includes('Powerful')?'selected':''}>🛡️ Мощный / Силовой</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary" style="width:100%; padding: 10px; margin-top: 10px;" onclick="alert('${l.saveMsg}')">${l.saveBtn}</button>
+                        </div>`;
+                } else if (appData.tab === 'advice') {
+                    main.innerHTML = `
+                        <div class="card">
+                            <h2>${l.adviceHeader}</h2>
+                            <p>${l.ad1}</p>
+                            <p style="margin-top:6px;">${l.ad2}</p>
+                            <p style="margin-top:6px;">${l.ad3}</p>
+                        </div>`;
+                }
             }
         }
 
